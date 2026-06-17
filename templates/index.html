@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOC Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <script>
+        let shownAlerts = [];
+
+        function showPopup(msg) {
+            if (!shownAlerts.includes(msg)) {
+                alert("🚨 SOC ALERT\n\n" + msg);
+                shownAlerts.push(msg);
+            }
+        }
+
+        async function loadData() {
+
+            try {
+
+                const response = await fetch("/api/data");
+                const data = await response.json();
+
+                document.getElementById("loginSuccess").innerText =
+                    data.counts["Login Success"] || 0;
+
+                document.getElementById("loginFailure").innerText =
+                    data.counts["Login Failure"] || 0;
+
+                document.getElementById("logoff").innerText =
+                    data.counts["Logoff"] || 0;
+
+                document.getElementById("processCreated").innerText =
+                    data.counts["Process Created"] || 0;
+
+                document.getElementById("timeChanged").innerText =
+                    data.counts["System Time Changed"] || 0;
+
+                document.getElementById("shutdown").innerText =
+                    data.counts["Shutdown"] || 0;
+
+                let logBox = document.getElementById("logs");
+                logBox.innerHTML = "";
+
+                data.logs.forEach(log => {
+
+                    logBox.innerHTML += `
+                    <div class="log">
+                        <span class="time">${log.time}</span>
+                        <span class="status">${log.status}</span>
+                        <span class="eventid">ID: ${log.event_id}</span>
+                    </div>
+                    `;
+                });
+
+                let alertBox = document.getElementById("alerts");
+                alertBox.innerHTML = "";
+
+                data.alerts.forEach(alertMsg => {
+
+                    alertBox.innerHTML += `
+                    <div class="alert-card">
+                        ${alertMsg}
+                    </div>
+                    `;
+
+                    showPopup(alertMsg);
+                });
+
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        window.onload = loadData;
+        setInterval(loadData, 5000);
+    </script>
+
+</head>
+<body>
+
+<div class="navbar">
+    <h1>🛡 SOC Security Monitoring Dashboard</h1>
+    <a href="/logout" class="logout-btn">Logout</a>
+</div>
+
+<div class="cards">
+
+    <div class="card success">
+        <h3>Login Success</h3>
+        <p id="loginSuccess">0</p>
+    </div>
+
+    <div class="card danger">
+        <h3>Login Failure</h3>
+        <p id="loginFailure">0</p>
+    </div>
+
+    <div class="card info">
+        <h3>Logoff</h3>
+        <p id="logoff">0</p>
+    </div>
+
+    <div class="card warning">
+        <h3>Process Created</h3>
+        <p id="processCreated">0</p>
+    </div>
+
+    <div class="card purple">
+        <h3>Time Changed</h3>
+        <p id="timeChanged">0</p>
+    </div>
+
+    <div class="card shutdown">
+        <h3>Shutdown</h3>
+        <p id="shutdown">0</p>
+    </div>
+
+</div>
+
+<div class="main-container">
+
+    <div class="panel">
+        <h2>📡 Live Security Logs</h2>
+        <div id="logs"></div>
+    </div>
+
+    <div class="panel">
+        <h2>🚨 Threat Alerts</h2>
+        <div id="alerts"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
